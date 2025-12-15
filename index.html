@@ -1,0 +1,1885 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>말랑 슬라임 키우기</title>
+  <style>
+    :root{
+      --bg:#f5fff8;
+      --card:#ffffff;
+      --green:#2bb673;
+      --green2:#1ea862;
+      --line:#d7efe0;
+      --text:#17412e;
+      --muted:#5b8a73;
+      --shadow:0 10px 30px rgba(31,110,73,.12);
+      --r:18px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%; margin:0; background:var(--bg); font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;}
+    button,input{font:inherit}
+    #app{
+      position:relative;
+      width: min(720px, 100vw);
+      height: min(1280px, 100vh);
+      margin: 0 auto;
+      background: radial-gradient(1200px 900px at 50% 0%, #ffffff 0%, var(--bg) 55%, #eafff3 100%);
+      overflow:hidden;
+      border-left: 1px solid rgba(0,0,0,.03);
+      border-right: 1px solid rgba(0,0,0,.03);
+    }
+    canvas{
+      position:absolute; inset:0;
+      width:100%; height:100%;
+      touch-action:none;
+    }
+
+
+    /* Home UI (Layout v2 based on mock) */
+    .cfgPickBtn{
+      margin-top: 8px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding: 8px 10px;
+      border-radius: 12px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.9);
+      color: var(--text);
+      font-weight: 1000;
+      cursor:pointer;
+      width: fit-content;
+      user-select:none;
+      box-shadow: 0 6px 16px rgba(31,110,73,.10);
+    }
+    .cfgPickBtn:active{transform: translateY(1px);}
+    #cfgFile{
+      position:absolute;
+      left:-9999px;
+      width:1px;
+      height:1px;
+      opacity:0;
+      pointer-events:none;
+    }
+
+    .homeUI2{gap:16px}
+    .homeTop{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+    }
+    .gemsPill{
+      flex: 1 1 auto;
+      justify-content:space-between;
+      align-items:flex-start;
+      padding: 12px 14px;
+    }
+    .gemsPill b{font-size:16px}
+    .gemsPill small{display:block;margin-top:4px}
+    .soundSquare{
+      width: 74px;
+      height: 74px;
+      border-radius: 16px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.85);
+      box-shadow: var(--shadow);
+      cursor:pointer;
+      font-weight: 1000;
+      color: var(--text);
+      backdrop-filter: blur(6px);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size: 22px;
+    }
+
+    .nameBar{
+      width:100%;
+      background: rgba(255,255,255,.85);
+      border:1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 16px 14px;
+      text-align:center;
+      backdrop-filter: blur(6px);
+    }
+    .nameText{font-size:28px; font-weight:1000; color:var(--text);}
+    .statText{margin-top:6px; font-size:13px; font-weight:900; color:var(--muted);}
+
+    .heroRow{
+      width:100%;
+      display:grid;
+      grid-template-columns: 76px 1fr 76px;
+      align-items:center;
+      gap: 10px;
+    }
+    .navArrow{
+      width:76px;
+      height:360px;
+      border:none;
+      border-radius: 18px;
+      background: rgba(255,255,255,.72);
+      border:1px solid var(--line);
+      box-shadow: var(--shadow);
+      cursor:pointer;
+      font-weight: 1000;
+      color: rgba(23,65,46,.55);
+      font-size: 28px;
+      backdrop-filter: blur(6px);
+    }
+    .navArrow:active{transform: translateY(1px);}
+
+    .heroBox{
+      height: 360px;
+      border-radius: 18px;
+      border:1px solid var(--line);
+      box-shadow: var(--shadow);
+      background:
+        radial-gradient(320px 220px at 30% 30%, rgba(43,182,115,.18), transparent 60%),
+        radial-gradient(320px 220px at 70% 70%, rgba(43,182,115,.10), transparent 60%),
+        rgba(255,255,255,.86);
+      backdrop-filter: blur(6px);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      overflow:hidden;
+    }
+    #previewCanvas{
+      width: 92%;
+      height: auto;
+      max-width: 420px;
+      image-rendering: auto;
+    }
+    .heroHint{
+      position:absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 8px 10px;
+      border-radius: 999px;
+      border:1px solid rgba(0,0,0,.05);
+      background: rgba(255,255,255,.72);
+      color: var(--muted);
+      font-weight: 900;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .purchaseBtn{
+      width:100%;
+      border:none;
+      border-radius: 16px;
+      padding: 16px 14px;
+      font-weight: 1000;
+      cursor:pointer;
+      color:white;
+      background: linear-gradient(180deg, var(--green), var(--green2));
+      box-shadow: var(--shadow);
+    }
+    .purchaseBtn.buy{
+      background: linear-gradient(180deg, #ffbf3d, #ff9b1e);
+    }
+    .purchaseBtn:disabled{
+      opacity: 0.55;
+      cursor:not-allowed;
+      filter: grayscale(0.15);
+    }
+
+    .startBtn2{
+      width:100%;
+      border:none;
+      border-radius: 18px;
+      padding: 22px 14px;
+      font-weight: 1100;
+      cursor:pointer;
+      color: var(--text);
+      background: rgba(255,255,255,.88);
+      border:1px solid var(--line);
+      box-shadow: var(--shadow);
+      font-size: 22px;
+    }
+    .hint2{margin-top: 2px}
+
+    /* Home UI */
+    .ui{
+      position:absolute; inset:0;
+      display:flex; flex-direction:column;
+      padding: 18px 18px calc(18px + env(safe-area-inset-bottom));
+      gap: 14px;
+    }
+    .topbar{
+      display:flex; justify-content:space-between; align-items:center;
+      gap: 10px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px;
+      padding: 10px 12px;
+      background: rgba(255,255,255,.75);
+      border:1px solid var(--line);
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(6px);
+    }
+    .dot{
+      width:12px; height:12px; border-radius:999px;
+      background: var(--green);
+      box-shadow: 0 0 0 6px rgba(43,182,115,.15);
+    }
+    .brand b{color:var(--text)}
+    .brand span{color:var(--muted); font-size:12px}
+
+    .pill{
+      display:flex; gap:8px; align-items:center;
+      padding: 10px 12px;
+      background: rgba(255,255,255,.75);
+      border:1px solid var(--line);
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(6px);
+      color: var(--text);
+    }
+    .pill small{color:var(--muted)}
+    .pill button{
+      border:none; background: linear-gradient(180deg, var(--green), var(--green2));
+      color:white; padding: 8px 10px; border-radius: 999px;
+      font-weight:700; cursor:pointer;
+    }
+    .pill button.secondary{
+      background:#ffffff;
+      color: var(--text);
+      border:1px solid var(--line);
+      box-shadow:none;
+      font-weight:700;
+    }
+    .pill input[type="file"]{display:none}
+    .pill label{
+      cursor:pointer;
+      padding: 8px 10px;
+      border-radius:999px;
+      border:1px dashed rgba(31,110,73,.25);
+      background: rgba(255,255,255,.6);
+      color: var(--muted);
+      font-weight:700;
+    }
+
+    .panel{
+      flex: 1;
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      min-height:0;
+    }
+    .card{
+      background: rgba(255,255,255,.85);
+      border:1px solid var(--line);
+      border-radius: var(--r);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      backdrop-filter: blur(6px);
+      min-height:0;
+    }
+    .card h2{
+      margin:0 0 10px;
+      color: var(--text);
+      font-size: 18px;
+    }
+
+    .skinRow{
+      display:grid;
+      grid-template-columns: 1.05fr 1.35fr;
+      gap: 12px;
+      align-items: stretch;
+      min-height: 0;
+    }
+    .preview{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      justify-content:center;
+      align-items:center;
+      height: 260px;
+      border-radius: calc(var(--r) - 6px);
+      border:1px solid rgba(0,0,0,.03);
+      background:
+        radial-gradient(200px 140px at 30% 30%, rgba(43,182,115,.20), transparent 60%),
+        radial-gradient(180px 120px at 70% 70%, rgba(43,182,115,.10), transparent 60%),
+        #ffffff;
+      position:relative;
+      overflow:hidden;
+    }
+    .preview .bigName{
+      margin-top: 8px;
+      font-weight: 900;
+      color: var(--text);
+    }
+    .preview .bigStat{
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .skinList{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      height:260px;
+      overflow:auto;
+      padding-right: 4px;
+    }
+    .skinItem{
+      display:flex; align-items:center; justify-content:space-between;
+      gap: 10px;
+      padding: 10px;
+      border-radius: 14px;
+      border:1px solid rgba(0,0,0,.05);
+      background: rgba(255,255,255,.75);
+    }
+    .skinLeft{display:flex; align-items:center; gap:10px; min-width:0}
+    .thumb{
+      width:46px; height:46px; border-radius: 999px;
+      background: #eee;
+      border: 1px solid rgba(0,0,0,.06);
+      flex: 0 0 auto;
+    }
+    .skinText{min-width:0}
+    .skinText b{
+      display:block;
+      color: var(--text);
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .skinText small{
+      color: var(--muted);
+      display:block;
+      margin-top: 2px;
+    }
+    .skinRight{display:flex; align-items:center; gap:8px}
+    .tag{
+      font-size:12px;
+      padding: 6px 8px;
+      border-radius: 999px;
+      background: rgba(43,182,115,.12);
+      color: var(--text);
+      border:1px solid rgba(43,182,115,.22);
+      font-weight:800;
+      white-space:nowrap;
+    }
+    .btn{
+      border:none;
+      border-radius: 999px;
+      padding: 8px 10px;
+      font-weight:900;
+      cursor:pointer;
+      color:white;
+      background: linear-gradient(180deg, var(--green), var(--green2));
+    }
+    .btn.gray{
+      background: #ffffff;
+      color: var(--text);
+      border:1px solid var(--line);
+    }
+    .btn.locked{
+      background: linear-gradient(180deg, #ffbf3d, #ff9b1e);
+    }
+
+    .bottomActions{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .start{
+      flex:1;
+      display:flex; align-items:center; justify-content:center;
+      gap:10px;
+      border:none;
+      background: linear-gradient(180deg, var(--green), var(--green2));
+      color:white;
+      font-weight: 1000;
+      padding: 14px 16px;
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      cursor:pointer;
+    }
+    .sub{
+      flex:0 0 auto;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.85);
+      color: var(--text);
+      padding: 14px 14px;
+      border-radius: 16px;
+      cursor:pointer;
+      font-weight: 900;
+    }
+
+    /* Ingame HUD */
+    .hud{
+      position:absolute;
+      left: 14px;
+      right: 14px;
+      top: 14px;
+      display:flex;
+      justify-content:space-between;
+      gap: 10px;
+      pointer-events:none;
+    }
+    .hud .chip{
+      pointer-events:none;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.72);
+      backdrop-filter: blur(6px);
+      box-shadow: var(--shadow);
+      color: var(--text);
+      font-weight:900;
+    }
+    .hud .chip small{color:var(--muted); font-weight:800}
+    .hudRight{
+      display:flex; gap:10px; align-items:center;
+    }
+    .hudBtn{
+      pointer-events:auto;
+      border:none;
+      border-radius: 999px;
+      padding: 10px 12px;
+      background: rgba(255,255,255,.72);
+      border:1px solid var(--line);
+      box-shadow: var(--shadow);
+      cursor:pointer;
+      font-weight: 1000;
+      color: var(--text);
+      backdrop-filter: blur(6px);
+    }
+
+    /* Mobile controls */
+    .dashBtn{
+      position:absolute;
+      right: 18px;
+      bottom: calc(18px + env(safe-area-inset-bottom));
+      width: 120px; height: 120px;
+      border-radius: 28px;
+      border:none;
+      background: linear-gradient(180deg, #ffbf3d, #ff9b1e);
+      color:white;
+      font-weight: 1000;
+      box-shadow: var(--shadow);
+      pointer-events:auto;
+      touch-action: none;
+      display:none;
+    }
+    .dragHint{
+      position:absolute;
+      left: 18px;
+      bottom: calc(18px + env(safe-area-inset-bottom));
+      padding: 10px 12px;
+      border-radius: 999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.72);
+      backdrop-filter: blur(6px);
+      box-shadow: var(--shadow);
+      color: var(--muted);
+      font-weight: 900;
+      display:none;
+      pointer-events:none;
+    }
+    @media (pointer:coarse){
+      .dashBtn,.dragHint{display:block;}
+    }
+
+    /* Overlays */
+    .overlay{
+      position:absolute; inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 20px;
+      background: rgba(10,30,20,.22);
+      backdrop-filter: blur(10px);
+    }
+    .modal{
+      width: 100%;
+      max-width: 520px;
+      background: rgba(255,255,255,.92);
+      border:1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+      color: var(--text);
+      text-align:center;
+    }
+    .modal h1{
+      margin: 4px 0 10px;
+      font-size: 24px;
+    }
+    .modal p{
+      margin: 6px 0;
+      color: var(--muted);
+      font-weight: 800;
+    }
+    .modal .big{
+      font-size: 18px;
+      color: var(--text);
+      font-weight: 1000;
+      margin-top: 10px;
+    }
+    .modal .row{
+      display:flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .modal .row button{
+      flex:1;
+      padding: 14px;
+      border-radius: 16px;
+      border:none;
+      cursor:pointer;
+      font-weight: 1000;
+      color:white;
+      background: linear-gradient(180deg, var(--green), var(--green2));
+    }
+    .modal .row button.gray{
+      background: #ffffff;
+      color: var(--text);
+      border:1px solid var(--line);
+    }
+    .hint{
+      font-size:12px;
+      color: var(--muted);
+      margin-top: 8px;
+      line-height:1.45;
+      text-align:left;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <canvas id="c"></canvas>
+
+    <!-- HOME UI -->
+    <div id="home" class="ui homeUI2">
+      <div class="homeTop">
+        <div class="pill gemsPill">
+          <b>보석 <span id="gemText">0</span></b>
+          <small id="cfgText">엑셀: 업로드 필요</small>
+          <label for="cfgFile" class="cfgPickBtn">엑셀 업로드</label>
+          <!-- 엑셀 자동 로드용(숨김) -->
+          <input id="cfgFile" type="file" accept=".xlsx,.xls" />
+        </div>
+
+        <button id="soundBtn" class="soundSquare" title="사운드 ON/OFF">🔊</button>
+      </div>
+
+      <div class="nameBar">
+        <div class="nameText" id="selName">슬라임 이름</div>
+        <div class="statText" id="selStat">속도 - · 대시 - · 가격 -</div>
+      </div>
+
+      <div class="heroRow">
+        <button id="prevSkinBtn" class="navArrow" aria-label="이전 슬라임">◀</button>
+
+        <div class="heroBox">
+          <canvas id="previewCanvas" width="320" height="240"></canvas>
+          <div class="heroHint">← / → 로 스킨 변경</div>
+        </div>
+
+        <button id="nextSkinBtn" class="navArrow" aria-label="다음 슬라임">▶</button>
+      </div>
+
+      <button id="applyBtn" class="purchaseBtn">구매 및 적용</button>
+
+      <button id="startBtn" class="startBtn2">시작</button>
+
+      <div class="hint hint2">
+        • PC: <b>WASD</b> 이동 / <b>Shift</b> 대시 / <b>Esc</b> 일시정지<br/>
+        • 모바일: 화면 <b>드래그</b> 이동 / 우측 <b>DASH</b><br/>
+        • 엑셀은 같은 폴더의 <b>slime_config.xlsx</b>를 자동 로드합니다(로컬 서버 필요)
+      </div>
+    </div>
+
+    <!-- INGAME HUD -->
+    <div id="hud" class="hud" style="display:none;">
+      <div class="chip">
+        <span>크기 <span id="sizeText">0</span></span>
+        <small id="lvlText">Lv 1</small>
+      </div>
+      <div class="hudRight">
+        <div class="chip"><span>보석 <span id="ingemText">0</span></span></div>
+        <div class="chip"><span>시간 <span id="timeText">5:00</span></span></div>
+        <button id="pauseBtn" class="hudBtn">⏸</button>
+        <button id="homeBtn" class="hudBtn">🏠</button>
+      </div>
+    </div>
+
+    <!-- Mobile helpers -->
+    <div id="dragHint" class="dragHint">드래그로 이동</div>
+    <button id="dashBtn" class="dashBtn">DASH</button>
+
+    <!-- RESULT -->
+    <div id="overlay" class="overlay">
+      <div class="modal">
+        <h1 id="resultTitle">GameOver</h1>
+        <p id="resultMsg">-</p>
+        <div class="big" id="resultBig">-</div>
+        <div class="row">
+          <button id="retryBtn">다시하기</button>
+          <button id="backBtn" class="gray">Home</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- XLSX 라이브러리 (엑셀 업로드용) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <script>
+    (() => {
+      // =========================
+      // Utils
+      // =========================
+      const $ = (id) => document.getElementById(id);
+      const Clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+      const Lerp = (a, b, t) => a + (b - a) * t;
+      const Len = (x,y)=>Math.hypot(x,y);
+      const Rand = (a,b)=>a + Math.random()*(b-a);
+      const RandInt = (a,b)=>Math.floor(Rand(a,b+1));
+      const Now = ()=>performance.now()/1000;
+      const Pad2 = (n)=>String(n|0).padStart(2,"0");
+
+      // =========================
+      // Persistent data
+      // =========================
+      const m_storageKey = "mallow_slime_save_v2";
+      const m_defaultSave = {
+        gems: 0,
+        owned: { yellow: true },
+        selected: "yellow",
+        soundOn: true
+      };
+      const LoadSave = () => {
+        try{
+          const _raw = localStorage.getItem(m_storageKey);
+          if(!_raw) return structuredClone(m_defaultSave);
+          const _s = JSON.parse(_raw);
+          return { ...structuredClone(m_defaultSave), ..._s, owned: { ...m_defaultSave.owned, ...(_s.owned||{}) } };
+        }catch(e){
+          return structuredClone(m_defaultSave);
+        }
+      };
+      const Save = () => localStorage.setItem(m_storageKey, JSON.stringify(m_save));
+      let m_save = LoadSave();
+
+      // =========================
+      // Config (Excel overridable)
+      // =========================
+      let m_cfgSource = "업로드 필요";
+      let m_cfg = {
+        skins: [
+          { id:"yellow", name:"노랑색 슬라임", speed:0.5, dashDistance:3, priceGems:0, colorHex:"#FFD84D", hat:"none" },
+          { id:"red", name:"빨간색 슬라임", speed:0.75, dashDistance:2.5, priceGems:500, colorHex:"#FF5A5A", hat:"none" },
+          { id:"green", name:"초록색 슬라임", speed:1.25, dashDistance:1.5, priceGems:500, colorHex:"#39D98A", hat:"none" },
+          { id:"yellow_star", name:"별 모자 노랑 슬라임", speed:3.0, dashDistance:0.0, priceGems:1000, colorHex:"#FFD84D", hat:"star" },
+        ],
+        leveling: [
+          { level:1, eatCountRequired:3 },
+          { level:2, eatCountRequired:4 },
+          { level:3, eatCountRequired:5 },
+          { level:4, eatCountRequired:6 },
+          { level:5, eatCountRequired:7 },
+          { level:6, eatCountRequired:8 },
+          { level:7, eatCountRequired:10 },
+          { level:8, eatCountRequired:12 },
+          { level:9, eatCountRequired:14 },
+          { level:10, eatCountRequired:16 },
+        ],
+        general: {
+          targetClearSize: 100,
+          playTimeSec: 300,
+          startPlayerSize: 6,
+          fixedGrowthPerEat: 1,
+          levelUpSizeBonus: 2,
+
+          maxEnemies: 100,
+          spawnIntervalSec: 4,
+          spawnMinDistancePx: 220,
+          spawnMaxDistancePx: 760,
+          spawnMinScaleAtMaxSize: 2.2,
+          spawnMaxScaleAtMaxSize: 2.0,
+          dashCooldownSec: 3,
+          dashConsumeSpeedPxPerSec: 1500, // distance consumption rate
+
+          enemyMaxSize: 100,
+          difficultyRampSec: 300, // reach peak difficulty by end of run
+
+          zoomMax: 1.0,
+          zoomMin: 0.45,
+          zoomSizeAtMin: 100,
+          zoomCurvePow: 0.75,
+
+          chargerWarnSec: 3,
+          chargerIntervalSec: 15,
+          chargerSpeedMultiplier: 2,
+          chargerKnockbackPx: 650,
+          knockbackScaleAtMaxSize: 1.8,
+          hitSizeMultiplier: 0.3333333,
+          hitInvulnSec: 1.0,
+        }
+      };
+
+      const GetSkinById = (id) => m_cfg.skins.find(s=>s.id===id) || m_cfg.skins[0];
+
+      // =========================
+      // Sound (simple WebAudio)
+      // =========================
+      let m_audioCtx = null;
+      const EnsureAudio = () => {
+        if(m_audioCtx) return;
+        try{ m_audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){}
+      };
+      const Beep = (freq, time=0.08, type="sine", gain=0.05) => {
+        if(!m_save.soundOn) return;
+        EnsureAudio();
+        if(!m_audioCtx) return;
+        const t0 = m_audioCtx.currentTime;
+        const osc = m_audioCtx.createOscillator();
+        const g = m_audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, t0);
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.exponentialRampToValueAtTime(gain, t0 + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + time);
+        osc.connect(g).connect(m_audioCtx.destination);
+        osc.start(t0);
+        osc.stop(t0 + time + 0.02);
+      };
+      const SfxEat = ()=>{ Beep(520,0.06,"triangle",0.05); Beep(880,0.05,"sine",0.03); };
+      const SfxDash = ()=>{ Beep(240,0.08,"sawtooth",0.04); };
+      const SfxHit = ()=>{ Beep(140,0.12,"square",0.05); };
+      const SfxLevel = ()=>{ Beep(980,0.08,"triangle",0.06); };
+      const SfxClear = ()=>{ Beep(660,0.09,"triangle",0.05); setTimeout(()=>Beep(880,0.11,"triangle",0.05),90); setTimeout(()=>Beep(1100,0.13,"triangle",0.05),200); };
+
+      // =========================
+      // UI refs
+      // =========================
+      const m_canvas = $("c");
+      const m_ctx = m_canvas.getContext("2d");
+
+      const m_home = $("home");
+      const m_prevSkinBtn = $("prevSkinBtn");
+      const m_nextSkinBtn = $("nextSkinBtn");
+      const m_applyBtn = $("applyBtn");
+      const m_startBtn = $("startBtn");
+      const m_cfgFile = $("cfgFile");
+      const m_cfgText = $("cfgText");
+      const m_soundBtn = $("soundBtn");
+      const m_gemText = $("gemText");
+
+      const m_previewCanvas = $("previewCanvas");
+      const m_pctx = m_previewCanvas.getContext("2d");
+      const m_selName = $("selName");
+      const m_selStat = $("selStat");
+
+      const m_hud = $("hud");
+      const m_sizeText = $("sizeText");
+      const m_lvlText = $("lvlText");
+      const m_ingemText = $("ingemText");
+      const m_timeText = $("timeText");
+      const m_pauseBtn = $("pauseBtn");
+      const m_homeBtn = $("homeBtn");
+
+      const m_dashBtn = $("dashBtn");
+      const m_dragHint = $("dragHint");
+
+      const m_overlay = $("overlay");
+      const m_resultTitle = $("resultTitle");
+      const m_resultMsg = $("resultMsg");
+      const m_resultBig = $("resultBig");
+      const m_retryBtn = $("retryBtn");
+      const m_backBtn = $("backBtn");
+
+      // =========================
+      // Canvas resize (720x1280 base)
+      // =========================
+      const Resize = () => {
+        const rect = document.getElementById("app").getBoundingClientRect();
+        const w = Math.floor(rect.width * devicePixelRatio);
+        const h = Math.floor(rect.height * devicePixelRatio);
+        if(m_canvas.width !== w || m_canvas.height !== h){
+          m_canvas.width = w;
+          m_canvas.height = h;
+        }
+      };
+
+      // =========================
+      // Game state
+      // =========================
+      const State = { Home:0, Playing:1, Paused:2, Over:3, Clear:4, TimeOver:5 };
+      let m_state = State.Home;
+
+      // Camera (infinite)
+      const m_cam = { x:0, y:0, zoom: 1.0 };
+
+      // Player
+      const m_player = {
+        x:0, y:0,
+        vx:0, vy:0,
+        size: 6,
+        skinId: m_save.selected,
+        level: 1,
+        eatInLevel: 0,
+        eatTotal: 0,
+
+        dashCd: 0,
+        dashRemain: 0,
+
+        hitInvuln: 0,
+        knockVx: 0,
+        knockVy: 0
+      };
+
+      // Enemies
+      const m_enemies = [];
+      let m_nextSpawnT = 0;
+      let m_nextChargerT = 0;
+      let m_timeStart = 0;
+      let m_timeLeft = 300;
+
+      // Input
+      const m_keys = new Set();
+
+      // Drag input (touch/mouse)
+      let m_dragActive = false;
+      let m_dragId = null;
+      let m_dragStartX = 0, m_dragStartY = 0;
+      let m_dragCurX = 0, m_dragCurY = 0;
+      let m_dragVecX = 0, m_dragVecY = 0; // -1..1
+      let m_dragPower = 0; // 0..1
+
+      // Score
+      let m_runGemsStart = 0;
+      let m_gemsEarnedRun = 0;
+
+      // =========================
+      // Excel config loader
+      // =========================
+      const ParseSheetToRows = (sheet) => {
+        const json = XLSX.utils.sheet_to_json(sheet, { defval:"" });
+        return Array.isArray(json) ? json : [];
+      };
+
+      const ApplyExcelConfig = (wb) => {
+        try{
+          const skinsSh = wb.Sheets["Skins"];
+          const levSh = wb.Sheets["Leveling"];
+          const genSh = wb.Sheets["General"];
+
+          if(skinsSh){
+            const rows = ParseSheetToRows(skinsSh);
+            const skins = rows.map(r => ({
+              id: String(r.id||"").trim(),
+              name: String(r.name||"").trim(),
+              speed: Number(r.speed),
+              dashDistance: Number(r.dashDistance),
+              priceGems: Number(r.priceGems),
+              colorHex: String(r.colorHex||"#FFD84D").trim(),
+              hat: String(r.hat||"none").trim()
+            })).filter(s => s.id && s.name && Number.isFinite(s.speed) && Number.isFinite(s.dashDistance) && Number.isFinite(s.priceGems));
+            if(skins.length >= 1){
+              m_cfg.skins = skins;
+              for(const s of m_cfg.skins){
+                if(s.priceGems <= 0) m_save.owned[s.id] = true;
+              }
+              if(!m_cfg.skins.some(s=>s.id===m_save.selected)){
+                m_save.selected = m_cfg.skins[0].id;
+                m_player.skinId = m_save.selected;
+              }
+            }
+          }
+
+          m_selectedSkinId = m_save.selected;
+          m_selectedSkinIdx = FindSkinIndex(m_selectedSkinId);
+
+          if(levSh){
+            const rows = ParseSheetToRows(levSh);
+            const lev = rows.map(r => ({
+              level: Number(r.level),
+              eatCountRequired: Number(r.eatCountRequired)
+            })).filter(x => Number.isFinite(x.level) && Number.isFinite(x.eatCountRequired) && x.level>=1 && x.eatCountRequired>=1)
+              .sort((a,b)=>a.level-b.level);
+            if(lev.length >= 1) m_cfg.leveling = lev;
+          }
+
+          if(genSh){
+            const rows = ParseSheetToRows(genSh);
+            const g = { ...m_cfg.general };
+            for(const r of rows){
+              const k = String(r.key||"").trim();
+              const v = Number(r.value);
+              if(!k || !Number.isFinite(v)) continue;
+              if(k in g) g[k] = v;
+            }
+            m_cfg.general = g;
+          }
+
+          Save();
+          RefreshHomeUI();
+          m_cfgText.textContent = "엑셀: 적용됨";
+        }catch(e){
+          console.warn(e);
+          m_cfgText.textContent = "엑셀: 실패";
+        }
+      };
+
+      // =========================
+      // UI build
+      // =========================
+      const FindSkinIndex = (id) => {
+        const i = m_cfg.skins.findIndex(s=>s.id===id);
+        return (i >= 0) ? i : 0;
+      };
+      let m_selectedSkinId = m_save.selected;
+      let m_selectedSkinIdx = FindSkinIndex(m_selectedSkinId);
+
+      const DrawCircle = (ctx,x,y,r,fill) => {
+        ctx.beginPath();
+        ctx.fillStyle = fill;
+        ctx.arc(x,y,r,0,Math.PI*2);
+        ctx.fill();
+      };
+
+      const DrawPreview = (skin) => {
+        const w = m_previewCanvas.width, h = m_previewCanvas.height;
+        m_pctx.clearRect(0,0,w,h);
+        // shadow
+        DrawCircle(m_pctx, w/2, h/2+55, 52, "rgba(0,0,0,.10)");
+        // body
+        DrawCircle(m_pctx, w/2, h/2+20, 62, skin.colorHex);
+        // highlight
+        DrawCircle(m_pctx, w/2-18, h/2+5, 16, "rgba(255,255,255,.35)");
+        // eyes
+        DrawCircle(m_pctx, w/2-18, h/2+18, 6, "rgba(23,65,46,.55)");
+        DrawCircle(m_pctx, w/2+18, h/2+18, 6, "rgba(23,65,46,.55)");
+        // mouth
+        m_pctx.strokeStyle = "rgba(23,65,46,.45)";
+        m_pctx.lineWidth = 4;
+        m_pctx.lineCap = "round";
+        m_pctx.beginPath();
+        m_pctx.arc(w/2, h/2+34, 12, 0.1*Math.PI, 0.9*Math.PI);
+        m_pctx.stroke();
+        // hat
+        if((skin.hat||"none").toLowerCase() === "star"){
+          m_pctx.fillStyle = "rgba(255,190,70,.95)";
+          m_pctx.beginPath();
+          const cx = w/2+26, cy = h/2-12, R = 14;
+          for(let i=0;i<10;i++){
+            const a = (Math.PI*2/10)*i - Math.PI/2;
+            const r = (i%2===0) ? R : R*0.45;
+            const px = cx + Math.cos(a)*r;
+            const py = cy + Math.sin(a)*r;
+            if(i===0) m_pctx.moveTo(px,py); else m_pctx.lineTo(px,py);
+          }
+          m_pctx.closePath();
+          m_pctx.fill();
+        }
+      };
+
+      const EscapeHtml = (s) => String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+
+      const RefreshHomeUI = () => {
+        m_gemText.textContent = String(m_save.gems|0);
+        m_cfgText.textContent = "엑셀: " + m_cfgSource;
+        m_soundBtn.textContent = m_save.soundOn ? "🔊" : "🔇";
+
+        // keep index in bounds
+        if(!m_cfg.skins || m_cfg.skins.length <= 0) return;
+        if(m_selectedSkinIdx < 0 || m_selectedSkinIdx >= m_cfg.skins.length) m_selectedSkinIdx = 0;
+        m_selectedSkinId = m_cfg.skins[m_selectedSkinIdx].id;
+
+        UpdateSelectedPanel();
+        RefreshBuyApplyButton();
+      };
+
+      const RefreshBuyApplyButton = () => {
+        const s = GetSkinById(m_selectedSkinId);
+        const owned = !!m_save.owned[s.id];
+        const isApplied = (m_save.selected === s.id);
+
+        m_applyBtn.disabled = false;
+        m_applyBtn.classList.remove("buy");
+
+        if(owned){
+          m_applyBtn.textContent = isApplied ? "적용됨" : "적용";
+          m_applyBtn.disabled = isApplied;
+        }else{
+          m_applyBtn.classList.add("buy");
+          m_applyBtn.textContent = `구매 (${s.priceGems}💎)`;
+          if((m_save.gems|0) < (s.priceGems|0)) m_applyBtn.disabled = true;
+        }
+      };
+
+      const UpdateSelectedPanel = () => {
+        const s = GetSkinById(m_selectedSkinId);
+        m_selName.textContent = s.name;
+        m_selStat.textContent = `이동속도 ${s.speed} · 대시거리 ${s.dashDistance} · 가격 ${s.priceGems}보석`;
+        DrawPreview(s);
+      };
+
+      // =========================
+      // Leveling / Growth
+      // =========================
+      const GetEatNeedForLevel = (level) => {
+        const hit = m_cfg.leveling.find(x=>x.level===level);
+        if(hit) return hit.eatCountRequired;
+        const last = m_cfg.leveling[m_cfg.leveling.length-1];
+        const lastNeed = (last?.eatCountRequired || 10);
+        const lastLv = (last?.level || 10);
+        return Math.ceil(lastNeed * Math.pow(1.12, Math.max(0, level-lastLv)));
+      };
+
+      const ApplyGrowth = (deltaSize) => {
+        const before = m_player.size;
+        m_player.size = Clamp(m_player.size + deltaSize, 2, m_cfg.general.enemyMaxSize);
+        const gained = Math.max(0, m_player.size - before);
+        // gems = growth units
+        const gemGain = gained;
+        m_save.gems += gemGain;
+        m_gemsEarnedRun += gemGain;
+        Save();
+      };
+
+      const ApplyEat = () => {
+        ApplyGrowth(m_cfg.general.fixedGrowthPerEat);
+        m_player.eatTotal += 1;
+        m_player.eatInLevel += 1;
+
+        const need = GetEatNeedForLevel(m_player.level);
+        if(m_player.eatInLevel >= need){
+          m_player.level += 1;
+          m_player.eatInLevel = 0;
+          ApplyGrowth(m_cfg.general.levelUpSizeBonus);
+          SfxLevel();
+        }
+
+        SfxEat();
+        if(m_player.size >= m_cfg.general.targetClearSize){
+          GameClear();
+        }
+      };
+
+      // =========================
+      // Spawning (infinite world)
+      // =========================
+      const Difficulty01 = () => Clamp((Now() - m_timeStart) / Math.max(1, m_cfg.general.difficultyRampSec), 0, 1);
+      const GetSize01 = () => {
+        const s0 = (m_cfg.general.startPlayerSize ?? 6);
+        const s1 = (m_cfg.general.targetClearSize ?? 100);
+        return Clamp((m_player.size - s0) / Math.max(1, (s1 - s0)), 0, 1);
+      };
+
+      const SpawnEnemy = (isCharger=false) => {
+        if(m_enemies.length >= m_cfg.general.maxEnemies) return;
+
+        const baseMinD = (m_cfg.general.spawnMinDistancePx ?? 200);
+        const baseMaxD = (m_cfg.general.spawnMaxDistancePx ?? m_cfg.general.spawnDistancePx ?? 900);
+        const size01 = GetSize01();
+        const minScale = Lerp(1.0, (m_cfg.general.spawnMinScaleAtMaxSize ?? 2.2), size01);
+        const maxScale = Lerp(1.0, (m_cfg.general.spawnMaxScaleAtMaxSize ?? 2.0), size01);
+        const minD = baseMinD * minScale;
+        const maxD = baseMaxD * maxScale;
+        const ang = Rand(0, Math.PI*2);
+        const dist = Rand(minD, maxD);
+        const x = m_player.x + Math.cos(ang) * dist;
+        const y = m_player.y + Math.sin(ang) * dist;
+
+        const diff = Difficulty01();
+        const maxSize = m_cfg.general.enemyMaxSize;
+
+        let size;
+        if(isCharger){
+          // charger: always bigger-ish
+          size = Clamp(m_player.size + Rand(4, 10 + diff*18), 4, maxSize);
+        }else{
+          // start: similar or slightly bigger, but include edible ones
+          const bias = Lerp(-1.2, 14, diff); // pushes bigger over time
+          size = Clamp(m_player.size + Rand(-3.0, 2.0) + bias * Rand(0.0, 1.0), 2, maxSize);
+        }
+
+        // simple palette (soft)
+        const palette = ["#7CF3B2","#6FE6FF","#FFD84D","#FF7EA7","#B6A6FF","#39D98A","#FF5A5A","#B9FBC0","#9BF6FF"];
+        const col = palette[RandInt(0,palette.length-1)];
+
+        const e = {
+          x,y,
+          vx:0, vy:0,
+          size,
+          color: col,
+          charger: isCharger,
+          warnT: isCharger ? m_cfg.general.chargerWarnSec : 0,
+          dashT: 0,
+          dashStarted: false,
+          lockDx: 0,
+          lockDy: 0,
+          retargetT: 0,
+          orbitDir: (Math.random()<0.5 ? -1 : 1),
+          orbitR: Rand(320, 680),
+          noiseSeed: Rand(0, 1000)
+        };
+        m_enemies.push(e);
+      };
+
+      const SpawnWave = () => {
+        // Every interval, spawn a batch that grows with time (so 5분 내 100 도달 가능)
+        const diff = Difficulty01();
+        const base = 2;
+        const extra = Math.floor(diff * 4); // 0..4
+        const batch = Clamp(base + extra, 2, 6);
+        for(let i=0;i<batch;i++) SpawnEnemy(false);
+      };
+
+      const SpawnCharger = () => {
+        SpawnEnemy(true);
+      };
+
+      // =========================
+      // Movement input
+      // =========================
+      const GetMoveInput = () => {
+        let x = 0, y = 0;
+
+        // PC keys
+        if(m_keys.has("KeyA") || m_keys.has("ArrowLeft")) x -= 1;
+        if(m_keys.has("KeyD") || m_keys.has("ArrowRight")) x += 1;
+        if(m_keys.has("KeyW") || m_keys.has("ArrowUp")) y -= 1;
+        if(m_keys.has("KeyS") || m_keys.has("ArrowDown")) y += 1;
+
+        const kl = Len(x,y);
+        if(kl > 1e-3){ x/=kl; y/=kl; }
+
+        // Drag adds/overrides (touch/mouse)
+        const dx = m_dragVecX, dy = m_dragVecY;
+        const dl = Len(dx,dy);
+        if(dl > 1e-3){
+          // blend: drag has priority
+          x = dx; y = dy;
+        }
+
+        // power
+        const p = Clamp(Math.max(m_dragPower, kl>0?1:0), 0, 1);
+        return { x,y, p };
+      };
+
+      // =========================
+      // Dash
+      // =========================
+      const TryDash = () => {
+        const skin = GetSkinById(m_player.skinId);
+        if(skin.dashDistance <= 0) return;
+        if(m_player.dashCd > 0) return;
+
+        // consume as distance in px
+        m_player.dashRemain = skin.dashDistance * 320; // tuned
+        m_player.dashCd = m_cfg.general.dashCooldownSec;
+        SfxDash();
+      };
+
+      // =========================
+      // Enemy AI
+      // =========================
+      const UpdateEnemy = (e, dt) => {
+        const dx = m_player.x - e.x;
+        const dy = m_player.y - e.y;
+        const dist = Math.max(0.001, Len(dx,dy));
+        const nx = dx/dist, ny = dy/dist;
+
+        if(e.charger){
+          if(e.warnT > 0){
+            e.warnT -= dt;
+            // slowly drift while warning
+            e.vx = Lerp(e.vx, nx*40, 0.08);
+            e.vy = Lerp(e.vy, ny*40, 0.08);
+          }else{
+            // dash: lock direction ONCE (no continuous tracking)
+            if(!e.dashStarted){
+              e.dashStarted = true;
+              e.lockDx = nx;
+              e.lockDy = ny;
+            }
+
+            const skin = GetSkinById(m_player.skinId);
+            const basePlayer = (skin.speed * 240);
+            const spd = basePlayer * m_cfg.general.chargerSpeedMultiplier * (1.0 + Difficulty01()*0.25);
+
+            e.vx = e.lockDx * spd;
+            e.vy = e.lockDy * spd;
+          }
+        }else{
+          // normal: bigger tends to chase, smaller tends to flee a bit
+          const diff = Difficulty01();
+          const bigger = (e.size > m_player.size + 0.2);
+          const smaller = (e.size < m_player.size - 0.2);
+
+          let tx = 0, ty = 0;
+          if(bigger){ tx = nx; ty = ny; }
+          else if(smaller){ tx = -nx; ty = -ny; }
+          else { tx = nx*0.4 + Rand(-0.6,0.6); ty = ny*0.4 + Rand(-0.6,0.6); }
+
+          const tl = Math.max(0.001, Len(tx,ty));
+          tx/=tl; ty/=tl;
+
+          const base = Lerp(70, 120, diff) * (1 / (1 + e.size/70));
+          e.vx = Lerp(e.vx, tx*base, 0.08);
+          e.vy = Lerp(e.vy, ty*base, 0.08);
+        }
+
+        e.x += e.vx * dt;
+        e.y += e.vy * dt;
+      };
+
+      // =========================
+      // Collision rules
+      // - eat if enemy size <= player size (same or smaller)
+      // - charger hit: knockback + size becomes 1/3
+      // =========================
+      const HandleCollisions = () => {
+        const pr = m_player.size * 7;
+        for(let i=m_enemies.length-1;i>=0;i--){
+          const e = m_enemies[i];
+          const er = e.size * 7;
+          const dx = e.x - m_player.x;
+          const dy = e.y - m_player.y;
+          const d = Len(dx,dy);
+
+          if(d < (pr + er) * 0.86){
+            if(e.charger){
+              if(m_player.hitInvuln > 0) continue;
+
+              // knockback
+              const nx = dx / Math.max(0.001,d);
+              const ny = dy / Math.max(0.001,d);
+              const size01 = GetSize01();
+              const kb = (m_cfg.general.chargerKnockbackPx ?? 650) * Lerp(1.0, (m_cfg.general.knockbackScaleAtMaxSize ?? 1.8), size01);
+              m_player.knockVx = -nx * kb;
+              m_player.knockVy = -ny * kb;
+
+              // size becomes 1/3
+              const before = m_player.size;
+              m_player.size = Clamp(m_player.size * m_cfg.general.hitSizeMultiplier, 2, m_cfg.general.enemyMaxSize);
+              const lost = Math.max(0, before - m_player.size);
+
+              // (보석은 "성장한 단위"만큼만. 감소는 보석 차감 없음)
+              m_player.hitInvuln = m_cfg.general.hitInvulnSec;
+              SfxHit();
+
+              // if too small, treat as gameover (optional). Here: if size < 2.1 => over
+              if(m_player.size <= 2.05){
+                GameOver("너무 작아져서 더 이상 버틸 수 없어요…");
+              }
+              continue;
+            }
+
+            // normal enemies
+            if(e.size <= m_player.size + 1e-6){
+              // eat
+              m_enemies.splice(i,1);
+              ApplyEat();
+              continue;
+            }else{
+              // bigger: lose immediately? user didn't specify now; keep original: eaten = game over
+              GameOver("더 큰 슬라임에게 먹혔어요…");
+              return;
+            }
+          }
+        }
+      };
+
+      // =========================
+      // Game result
+      // =========================
+      const EndRun = (state, title, msg) => {
+        if(m_state !== State.Playing && m_state !== State.Paused) return;
+        m_state = state;
+
+        m_resultTitle.textContent = title;
+        m_resultMsg.textContent = msg;
+        m_resultBig.textContent = `최종 크기 ${m_player.size.toFixed(1)} · 획득 보석 +${Math.round(m_gemsEarnedRun)}`;
+        m_overlay.style.display = "flex";
+      };
+
+      const GameOver = (msg) => EndRun(State.Over, "GameOver", msg || "실패했어요…");
+      const GameClear = () => { SfxClear(); EndRun(State.Clear, "Clear!", "크기 100 도달! 🎉"); };
+      const TimeOver = () => EndRun(State.TimeOver, "Time Over", "5분이 끝났어요! 다시 도전해요.");
+
+      // =========================
+      // HUD
+      // =========================
+      const UpdateHud = () => {
+        m_sizeText.textContent = m_player.size.toFixed(1);
+        m_lvlText.textContent = `Lv ${m_player.level} (${m_player.eatInLevel}/${GetEatNeedForLevel(m_player.level)})`;
+        m_ingemText.textContent = String(m_save.gems|0);
+        const t = Math.max(0, m_timeLeft);
+        const mm = Math.floor(t/60);
+        const ss = Math.floor(t%60);
+        m_timeText.textContent = `${mm}:${Pad2(ss)}`;
+      };
+
+      // =========================
+      // Drawing (simple circles)
+      // =========================
+      const GetWorldScale = () => (m_cam.zoom * devicePixelRatio);
+      const GetPlayerVisualScale = () => {
+        // Keep player looking large while camera zooms out.
+        // 0 => player scales like world, 1 => player keeps constant screen size.
+        const comp = Clamp((m_cfg.general.playerZoomComp ?? 0.55), 0, 1);
+        const z = Clamp(m_cam.zoom, 0.25, 2.0);
+        const mul = Lerp(1.0, (1.0 / z), comp);
+        return GetWorldScale() * mul;
+      };
+      const WorldToScreen = (x,y) => {
+        const sc = GetWorldScale();
+        return {
+          x: (x - m_cam.x) * sc + m_canvas.width/2,
+          y: (y - m_cam.y) * sc + m_canvas.height/2
+        };
+      };
+
+      const DrawBackground = () => {
+        const w = m_canvas.width, h = m_canvas.height;
+        m_ctx.clearRect(0,0,w,h);
+
+        // soft background
+        const g = m_ctx.createRadialGradient(w*0.5,h*0.12, 10, w*0.5,h*0.35, Math.max(w,h));
+        g.addColorStop(0, "rgba(255,255,255,1)");
+        g.addColorStop(1, "rgba(245,255,248,1)");
+        m_ctx.fillStyle = g;
+        m_ctx.fillRect(0,0,w,h);
+
+        // black cross marks on floor (clear movement reference)
+        const sc = GetWorldScale();
+        const stepWorld = 160;
+        const step = stepWorld * sc;
+        const ox = ((-m_cam.x * sc) % step + step) % step;
+        const oy = ((-m_cam.y * sc) % step + step) % step;
+        const L = 16 * sc;
+        m_ctx.save();
+        m_ctx.strokeStyle = "rgba(0,0,0,.28)";
+        m_ctx.lineWidth = 2.2 * devicePixelRatio;
+        m_ctx.lineCap = "round";
+        for(let y=oy; y<h; y+=step){
+          for(let x=ox; x<w; x+=step){
+            m_ctx.beginPath();
+            m_ctx.moveTo(x-L, y);
+            m_ctx.lineTo(x+L, y);
+            m_ctx.moveTo(x, y-L);
+            m_ctx.lineTo(x, y+L);
+            m_ctx.stroke();
+          }
+        }
+        m_ctx.restore();
+      };
+
+      const DrawEnemy = (e) => {
+        const p = WorldToScreen(e.x,e.y);
+        const sc = GetWorldScale();
+        const r = e.size * 7 * sc;
+
+        // shadow
+        m_ctx.globalAlpha = 0.10;
+        m_ctx.fillStyle = "rgba(0,0,0,1)";
+        m_ctx.beginPath();
+        m_ctx.ellipse(p.x+2*devicePixelRatio, p.y+r*0.9, r*0.8, r*0.26, 0, 0, Math.PI*2);
+        m_ctx.fill();
+
+        // body
+        m_ctx.globalAlpha = 1.0;
+        m_ctx.fillStyle = e.color;
+        m_ctx.beginPath();
+        m_ctx.arc(p.x, p.y, r, 0, Math.PI*2);
+        m_ctx.fill();
+
+        // highlight
+        m_ctx.globalAlpha = 0.28;
+        m_ctx.fillStyle = "white";
+        m_ctx.beginPath();
+        m_ctx.arc(p.x-r*0.35, p.y-r*0.35, r*0.22, 0, Math.PI*2);
+        m_ctx.fill();
+        m_ctx.globalAlpha = 1.0;
+
+        // charger warning ring
+        if(e.charger && e.warnT > 0){
+          m_ctx.save();
+          m_ctx.globalAlpha = 0.35 + 0.25*Math.sin(Now()*10);
+          m_ctx.strokeStyle = "rgba(255,80,80,1)";
+          m_ctx.lineWidth = 6*devicePixelRatio;
+          m_ctx.beginPath();
+          m_ctx.arc(p.x,p.y, r*1.25, 0, Math.PI*2);
+          m_ctx.stroke();
+          m_ctx.restore();
+        }
+      };
+
+      const DrawPlayer = () => {
+        const skin = GetSkinById(m_player.skinId);
+        const p = WorldToScreen(m_player.x,m_player.y);
+        const sc = GetPlayerVisualScale();
+        const r = m_player.size * 7 * sc;
+
+        // invuln blink
+        const blink = (m_player.hitInvuln > 0) ? (Math.sin(Now()*18) > 0 ? 0.55 : 1.0) : 1.0;
+
+        // shadow
+        m_ctx.globalAlpha = 0.12 * blink;
+        m_ctx.fillStyle = "rgba(0,0,0,1)";
+        m_ctx.beginPath();
+        m_ctx.ellipse(p.x+2*devicePixelRatio, p.y+r*0.95, r*0.85, r*0.28, 0, 0, Math.PI*2);
+        m_ctx.fill();
+
+        // body
+        m_ctx.globalAlpha = 1.0 * blink;
+        m_ctx.fillStyle = skin.colorHex;
+        m_ctx.beginPath();
+        m_ctx.arc(p.x,p.y,r,0,Math.PI*2);
+        m_ctx.fill();
+
+        // eyes
+        m_ctx.globalAlpha = 0.7 * blink;
+        m_ctx.fillStyle = "rgba(23,65,46,.75)";
+        m_ctx.beginPath();
+        m_ctx.arc(p.x-r*0.28, p.y-r*0.06, r*0.10, 0, Math.PI*2);
+        m_ctx.arc(p.x+r*0.28, p.y-r*0.06, r*0.10, 0, Math.PI*2);
+        m_ctx.fill();
+
+        // hat star
+        if((skin.hat||"none").toLowerCase() === "star"){
+          m_ctx.globalAlpha = 1.0 * blink;
+          m_ctx.fillStyle = "rgba(255,190,70,.95)";
+          m_ctx.beginPath();
+          const cx = p.x+r*0.35, cy = p.y-r*0.95, R = r*0.30;
+          for(let i=0;i<10;i++){
+            const a = (Math.PI*2/10)*i - Math.PI/2;
+            const rr = (i%2===0) ? R : R*0.45;
+            const px = cx + Math.cos(a)*rr;
+            const py = cy + Math.sin(a)*rr;
+            if(i===0) m_ctx.moveTo(px,py); else m_ctx.lineTo(px,py);
+          }
+          m_ctx.closePath();
+          m_ctx.fill();
+        }
+
+        m_ctx.globalAlpha = 1.0;
+      };
+
+      const DrawOffscreenChargerArrow = () => {
+        // edge indicator for chargers during warn
+        const w = m_canvas.width, h = m_canvas.height;
+        const margin = 120 * devicePixelRatio;
+        for(const e of m_enemies){
+          if(!e.charger || e.warnT <= 0) continue;
+          const p = WorldToScreen(e.x, e.y);
+          if(p.x>=margin && p.x<=w-margin && p.y>=margin && p.y<=h-margin) continue;
+
+          const ang = Math.atan2(e.y-m_cam.y, e.x-m_cam.x);
+          const rad = Math.min(w,h) * 0.42;
+          const cx = w/2 + Math.cos(ang) * rad;
+          const cy = h/2 + Math.sin(ang) * rad;
+
+          m_ctx.save();
+          m_ctx.translate(cx,cy);
+          m_ctx.rotate(ang);
+          m_ctx.globalAlpha = 0.9;
+          m_ctx.fillStyle = "rgba(255,80,80,1)";
+          m_ctx.beginPath();
+          m_ctx.moveTo(0,0);
+          m_ctx.lineTo(-22*devicePixelRatio, -12*devicePixelRatio);
+          m_ctx.lineTo(-22*devicePixelRatio,  12*devicePixelRatio);
+          m_ctx.closePath();
+          m_ctx.fill();
+          m_ctx.restore();
+        }
+      };
+
+      // =========================
+      // Game loop
+      // =========================
+      let m_lastT = Now();
+
+      const ResetRun = () => {
+        m_enemies.length = 0;
+
+        m_player.x = 0; m_player.y = 0;
+        m_player.vx = 0; m_player.vy = 0;
+        m_player.knockVx = 0; m_player.knockVy = 0;
+        m_player.size = m_cfg.general.startPlayerSize;
+        m_player.level = 1;
+        m_player.eatInLevel = 0;
+        m_player.eatTotal = 0;
+        m_player.dashCd = 0;
+        m_player.dashRemain = 0;
+        m_player.hitInvuln = 0;
+
+        m_cam.x = 0; m_cam.y = 0; m_cam.zoom = 1.0;
+
+        m_timeStart = Now();
+        m_timeLeft = m_cfg.general.playTimeSec;
+
+        m_nextSpawnT = Now() + 0.8;
+        m_nextChargerT = Now() + m_cfg.general.chargerIntervalSec;
+
+        m_runGemsStart = m_save.gems;
+        m_gemsEarnedRun = 0;
+
+        // initial spawn: "플레이어와 비슷하거나 1레벨 정도 큼" + 먹을 수 있는 것도 섞기
+        for(let i=0;i<14;i++) SpawnEnemy(false);
+        UpdateHud();
+      };
+
+      const StartGame = () => {
+        EnsureAudio();
+        Resize();
+        ResetRun();
+        m_state = State.Playing;
+        m_home.style.display = "none";
+        m_hud.style.display = "flex";
+        m_overlay.style.display = "none";
+      };
+
+      const BackToHome = () => {
+        m_state = State.Home;
+        m_home.style.display = "flex";
+        m_hud.style.display = "none";
+        m_overlay.style.display = "none";
+        RefreshHomeUI();
+      };
+
+      const PauseToggle = () => {
+        if(m_state === State.Playing) m_state = State.Paused;
+        else if(m_state === State.Paused) m_state = State.Playing;
+      };
+
+      const Update = () => {
+        Resize();
+        const t = Now();
+        const dt = Clamp(t - m_lastT, 0, 1/20);
+        m_lastT = t;
+
+        if(m_state === State.Playing){
+          // timer
+          m_timeLeft -= dt;
+          if(m_timeLeft <= 0){
+            m_timeLeft = 0;
+            TimeOver();
+          }
+
+          // cooldowns
+          m_player.dashCd = Math.max(0, m_player.dashCd - dt);
+          m_player.hitInvuln = Math.max(0, m_player.hitInvuln - dt);
+
+          // spawn wave
+          if(t >= m_nextSpawnT){
+            m_nextSpawnT = t + m_cfg.general.spawnIntervalSec;
+            SpawnWave();
+          }
+
+          // charger
+          if(t >= m_nextChargerT){
+            m_nextChargerT = t + m_cfg.general.chargerIntervalSec;
+            SpawnCharger();
+          }
+
+          // input
+          const skin = GetSkinById(m_player.skinId);
+          const inpt = GetMoveInput();
+
+          const baseSpeed = skin.speed * 240; // px/sec
+          let vx = inpt.x * baseSpeed * (0.35 + 0.65*inpt.p);
+          let vy = inpt.y * baseSpeed * (0.35 + 0.65*inpt.p);
+
+          // dash as remaining distance; direction can change
+          if(m_player.dashRemain > 0){
+            const dirLen = Math.max(0.001, Len(inpt.x,inpt.y));
+            const dx = (dirLen>0.1 ? inpt.x/dirLen : (Math.abs(m_player.vx)+Math.abs(m_player.vy)>1 ? m_player.vx/Math.max(0.001,Len(m_player.vx,m_player.vy)) : 1));
+            const dy = (dirLen>0.1 ? inpt.y/dirLen : (Math.abs(m_player.vx)+Math.abs(m_player.vy)>1 ? m_player.vy/Math.max(0.001,Len(m_player.vx,m_player.vy)) : 0));
+
+            const consume = Math.min(m_player.dashRemain, m_cfg.general.dashConsumeSpeedPxPerSec * dt);
+            m_player.dashRemain -= consume;
+
+            // move by consumed distance directly
+            m_player.x += dx * consume;
+            m_player.y += dy * consume;
+
+            // still allow minor control smoothing
+            vx = dx * baseSpeed * 1.2;
+            vy = dy * baseSpeed * 1.2;
+          }
+
+          // knockback smoothing
+          m_player.knockVx = Lerp(m_player.knockVx, 0, 0.12);
+          m_player.knockVy = Lerp(m_player.knockVy, 0, 0.12);
+
+          // apply velocity with accel/decel (no-input drift fix)
+          const hasInput = (Math.abs(inpt.x) + Math.abs(inpt.y)) > 0.001;
+          const accelRate = 10.0;   // start moving
+          const decelRate = 14.0;   // stop moving
+          const rate = hasInput ? accelRate : decelRate;
+          const k = 1.0 - Math.exp(-rate * dt);
+
+          m_player.vx += (vx - m_player.vx) * k;
+          m_player.vy += (vy - m_player.vy) * k;
+
+          // snap to zero to prevent micro-drift
+          if(!hasInput && m_player.dashRemain <= 0 && Math.abs(m_player.knockVx) < 0.5 && Math.abs(m_player.knockVy) < 0.5){
+            if(Math.abs(m_player.vx) < 2.0) m_player.vx = 0;
+            if(Math.abs(m_player.vy) < 2.0) m_player.vy = 0;
+          }
+
+          m_player.x += (m_player.vx + m_player.knockVx) * dt;
+          m_player.y += (m_player.vy + m_player.knockVy) * dt;
+
+          // camera follow
+          m_cam.x = Lerp(m_cam.x, m_player.x, 0.14);
+          m_cam.y = Lerp(m_cam.y, m_player.y, 0.14);
+          // camera zoom out as size grows (bigger size => wider view)
+          const zMax = (m_cfg.general.zoomMax ?? 1.0);
+          const zMin = (m_cfg.general.zoomMin ?? 0.45);
+          const zAt = Math.max(1, (m_cfg.general.zoomSizeAtMin ?? m_cfg.general.targetClearSize ?? 100));
+          const rawT = Clamp((m_player.size - m_cfg.general.startPlayerSize) / Math.max(1, (zAt - m_cfg.general.startPlayerSize)), 0, 1);
+          const pow = Clamp((m_cfg.general.zoomCurvePow ?? 0.75), 0.2, 2.5);
+          const zT = Math.pow(rawT, pow);
+          const targetZoom = Lerp(zMax, zMin, zT);
+          m_cam.zoom = Lerp(m_cam.zoom, targetZoom, 0.10);
+// enemies update
+          for(const e of m_enemies) UpdateEnemy(e, dt);
+
+          // collisions
+          HandleCollisions();
+
+          // cleanup too far (keep performance)
+          const maxD = 3200;
+          for(let i=m_enemies.length-1;i>=0;i--){
+            const e = m_enemies[i];
+            if(Len(e.x-m_player.x, e.y-m_player.y) > maxD && m_enemies.length > 40){
+              m_enemies.splice(i,1);
+            }
+          }
+
+          UpdateHud();
+        }
+
+        Draw();
+        requestAnimationFrame(Update);
+      };
+
+      const Draw = () => {
+        DrawBackground();
+
+        // enemies
+        for(const e of m_enemies) DrawEnemy(e);
+
+        // player
+        if(m_state !== State.Home) DrawPlayer();
+
+        DrawOffscreenChargerArrow();
+
+        // pause overlay
+        if(m_state === State.Paused){
+          m_ctx.save();
+          m_ctx.globalAlpha = 0.18;
+          m_ctx.fillStyle = "rgba(10,30,20,1)";
+          m_ctx.fillRect(0,0,m_canvas.width,m_canvas.height);
+          m_ctx.globalAlpha = 0.9;
+          m_ctx.fillStyle = "rgba(255,255,255,.9)";
+          m_ctx.font = `${28*devicePixelRatio}px system-ui`;
+          m_ctx.textAlign = "center";
+          m_ctx.fillText("PAUSED", m_canvas.width/2, m_canvas.height/2);
+          m_ctx.restore();
+        }
+      };
+
+      // =========================
+      // Events
+      // =========================
+      window.addEventListener("resize", Resize);
+
+      window.addEventListener("keydown", (e) => {
+        if(e.code === "Escape"){
+          if(m_state === State.Playing || m_state === State.Paused) PauseToggle();
+          return;
+        }
+        if(e.code === "ShiftLeft" || e.code === "ShiftRight"){
+          if(m_state === State.Playing) TryDash();
+        }
+        m_keys.add(e.code);
+      });
+      window.addEventListener("keyup", (e) => m_keys.delete(e.code));
+
+      // Drag movement (works for mouse & touch)
+      const OnPointerDown = (e) => {
+        if(m_state !== State.Playing) return;
+        if(m_dragActive) return;
+        // left half? not required. use first pointer
+        m_dragActive = true;
+        m_dragId = e.pointerId;
+        m_dragStartX = e.clientX;
+        m_dragStartY = e.clientY;
+        m_dragCurX = e.clientX;
+        m_dragCurY = e.clientY;
+        m_dragVecX = 0; m_dragVecY = 0; m_dragPower = 0;
+        try{ m_canvas.setPointerCapture(e.pointerId); }catch(_){}
+      };
+
+      const OnPointerMove = (e) => {
+        if(!m_dragActive || e.pointerId !== m_dragId) return;
+        m_dragCurX = e.clientX;
+        m_dragCurY = e.clientY;
+        const dx = (m_dragCurX - m_dragStartX);
+        const dy = (m_dragCurY - m_dragStartY);
+        const max = 90; // pixels for full power
+        const l = Math.max(0.001, Math.hypot(dx,dy));
+        const dead = 10; // px
+        if(l < dead){
+          m_dragPower = 0;
+          m_dragVecX = 0;
+          m_dragVecY = 0;
+          return;
+        }
+        m_dragPower = Clamp(l / max, 0, 1);
+        m_dragVecX = Clamp(dx / l, -1, 1);
+        m_dragVecY = Clamp(dy / l, -1, 1);
+      };
+
+      const OnPointerUp = (e) => {
+        if(!m_dragActive || e.pointerId !== m_dragId) return;
+        m_dragActive = false;
+        m_dragId = null;
+        m_dragVecX = 0; m_dragVecY = 0; m_dragPower = 0;
+      };
+
+      m_canvas.addEventListener("pointerdown", OnPointerDown, { passive:true });
+      m_canvas.addEventListener("pointermove", OnPointerMove, { passive:true });
+      m_canvas.addEventListener("pointerup", OnPointerUp, { passive:true });
+      m_canvas.addEventListener("pointercancel", OnPointerUp, { passive:true });
+
+      // Prevent scroll
+      m_canvas.addEventListener("touchmove", (e) => e.preventDefault(), { passive:false });
+
+      // Dash button (mobile)
+      m_dashBtn.addEventListener("pointerdown", () => {
+        if(m_state === State.Playing) TryDash();
+      });
+
+      // Home buttons
+      // Skin navigation
+      m_prevSkinBtn.onclick = () => {
+        if(!m_cfg.skins || m_cfg.skins.length<=0) return;
+        m_selectedSkinIdx = (m_selectedSkinIdx - 1 + m_cfg.skins.length) % m_cfg.skins.length;
+        RefreshHomeUI();
+        Beep(660,0.03,"sine",0.02);
+      };
+      m_nextSkinBtn.onclick = () => {
+        if(!m_cfg.skins || m_cfg.skins.length<=0) return;
+        m_selectedSkinIdx = (m_selectedSkinIdx + 1) % m_cfg.skins.length;
+        RefreshHomeUI();
+        Beep(660,0.03,"sine",0.02);
+      };
+
+      m_applyBtn.onclick = () => {
+        const s = GetSkinById(m_selectedSkinId);
+        const owned = !!m_save.owned[s.id];
+
+        if(owned){
+          m_save.selected = s.id;
+          m_player.skinId = s.id;
+          Save();
+          Beep(660,0.06,"triangle",0.05);
+          RefreshHomeUI();
+          return;
+        }
+
+        if((m_save.gems|0) >= (s.priceGems|0)){
+          m_save.gems -= (s.priceGems|0);
+          m_save.owned[s.id] = true;
+          m_save.selected = s.id;
+          m_player.skinId = s.id;
+          Save();
+          Beep(900,0.07,"triangle",0.05);
+          RefreshHomeUI();
+        }else{
+          Beep(180,0.08,"square",0.05);
+        }
+      };
+
+      m_startBtn.onclick = () => {
+        const s = GetSkinById(m_selectedSkinId);
+        if(!m_save.owned[s.id]){ Beep(180,0.08,"square",0.05); return; }
+        m_save.selected = s.id;
+        m_player.skinId = s.id;
+        Save();
+        StartGame();
+      };
+
+      // HUD buttons
+      m_pauseBtn.onclick = () => {
+        if(m_state === State.Playing || m_state === State.Paused) PauseToggle();
+      };
+      m_homeBtn.onclick = () => BackToHome();
+
+      // Result buttons
+      m_retryBtn.onclick = () => StartGame();
+      m_backBtn.onclick = () => BackToHome();
+
+      // Sound
+      m_soundBtn.onclick = () => {
+        m_save.soundOn = !m_save.soundOn;
+        Save();
+        RefreshHomeUI();
+        if(m_save.soundOn) Beep(880,0.06,"triangle",0.05);
+      };
+      // Excel upload
+      m_cfgFile.addEventListener("change", async (e) => {
+        const f = e.target.files?.[0];
+        if(!f) return;
+        try{
+          const buf = await f.arrayBuffer();
+          const wb = XLSX.read(buf, { type:"array" });
+          ApplyExcelConfig(wb);
+          m_cfgSource = f.name;
+          m_cfgText.textContent = "엑셀: " + f.name;
+        }catch(err){
+          console.warn(err);
+          m_cfgText.textContent = "엑셀: 실패";
+        }finally{
+          e.target.value = "";
+        }
+      });
+
+      // Boot
+      const Boot = () => {
+        m_player.skinId = m_save.selected;
+        m_selectedSkinId = m_save.selected;
+
+        RefreshHomeUI();
+        Resize();
+
+
+        // unlock audio on first interaction
+        const unlock = () => {
+          EnsureAudio();
+          if(m_audioCtx && m_audioCtx.state === "suspended") m_audioCtx.resume();
+          window.removeEventListener("pointerdown", unlock);
+          window.removeEventListener("touchstart", unlock);
+        };
+        window.addEventListener("pointerdown", unlock, { once:true });
+        window.addEventListener("touchstart", unlock, { once:true });
+
+        requestAnimationFrame(Update);
+      };
+
+      Boot();
+    })();
+  </script>
+</body>
+</html>
