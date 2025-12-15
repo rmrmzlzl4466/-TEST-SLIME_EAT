@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>말랑 슬라임 키우기</title>
   <style>
+    .cfgHidden{display:none !important;}
+
     :root{
       --bg:#f5fff8;
       --card:#ffffff;
@@ -37,32 +39,6 @@
 
 
     /* Home UI (Layout v2 based on mock) */
-    .cfgPickBtn{
-      margin-top: 8px;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      padding: 8px 10px;
-      border-radius: 12px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.9);
-      color: var(--text);
-      font-weight: 1000;
-      cursor:pointer;
-      width: fit-content;
-      user-select:none;
-      box-shadow: 0 6px 16px rgba(31,110,73,.10);
-    }
-    .cfgPickBtn:active{transform: translateY(1px);}
-    #cfgFile{
-      position:absolute;
-      left:-9999px;
-      width:1px;
-      height:1px;
-      opacity:0;
-      pointer-events:none;
-    }
-
     .homeUI2{gap:16px}
     .homeTop{
       display:flex;
@@ -566,10 +542,9 @@
       <div class="homeTop">
         <div class="pill gemsPill">
           <b>보석 <span id="gemText">0</span></b>
-          <small id="cfgText">엑셀: 업로드 필요</small>
-          <label for="cfgFile" class="cfgPickBtn">엑셀 업로드</label>
+          <small id="cfgText">엑셀: 기본값</small>
           <!-- 엑셀 자동 로드용(숨김) -->
-          <input id="cfgFile" type="file" accept=".xlsx,.xls" />
+          <input id="cfgFile" class="cfgHidden" type="file" accept=".xlsx,.xls" />
         </div>
 
         <button id="soundBtn" class="soundSquare" title="사운드 ON/OFF">🔊</button>
@@ -677,7 +652,7 @@
       // =========================
       // Config (Excel overridable)
       // =========================
-      let m_cfgSource = "업로드 필요";
+      let m_cfgSource = "기본값";
       let m_cfg = {
         skins: [
           { id:"yellow", name:"노랑색 슬라임", speed:0.5, dashDistance:3, priceGems:0, colorHex:"#FFD84D", hat:"none" },
@@ -1838,6 +1813,24 @@
         RefreshHomeUI();
         if(m_save.soundOn) Beep(880,0.06,"triangle",0.05);
       };
+
+      const AutoLoadConfigFromUrl = async (url) => {
+        try{
+          m_cfgText.textContent = "엑셀: 자동 로드 중…";
+          const res = await fetch(url, { cache: "no-store" });
+          if(!res.ok) throw new Error("HTTP " + res.status);
+          const buf = await res.arrayBuffer();
+          const wb = XLSX.read(buf, { type:"array" });
+          ApplyExcelConfig(wb);
+          m_cfgSource = url.split("/").pop() || url;
+          m_cfgText.textContent = "엑셀: " + m_cfgSource + " (자동)";
+        }catch(err){
+          // Likely running on file:// or missing file. Keep defaults.
+          console.warn("Auto excel load failed:", err);
+          m_cfgText.textContent = "엑셀: 기본값";
+        }
+      };
+
       // Excel upload
       m_cfgFile.addEventListener("change", async (e) => {
         const f = e.target.files?.[0];
@@ -1864,6 +1857,8 @@
         RefreshHomeUI();
         Resize();
 
+        // Auto-load local excel config (requires http/https, not file://)
+        AutoLoadConfigFromUrl("./slime_config.xlsx");
 
         // unlock audio on first interaction
         const unlock = () => {
